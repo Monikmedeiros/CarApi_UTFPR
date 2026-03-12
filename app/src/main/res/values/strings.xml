@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CarrosApi</string>
+    <string name="error_fetch_item">Erro ao retornar o item</string>
+    <string name="success_delete">Excluido com sucesso</string>
+    <string name="error_delete">Item excluido</string>
+    <string name="success_update">Item Atualizado</string>
+    <string name="error_update">Erro ao atualizar o item</string>
+</resources>
