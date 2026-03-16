@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
         binding.addCar.setOnClickListener {
+            navigateToNewItemActivity()
 
         }
 
@@ -131,6 +132,11 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun navigateToNewItemActivity() {
+
+        startActivity(NewItemActivity.newIntent(this))
+
+    }
 
 
     private fun fetchItems() {
@@ -172,3 +178,4 @@ class MainActivity : AppCompatActivity() {
 
     }
 }
+

@@ -52,6 +52,7 @@ class ItemDetailActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun setupView() {
         setSupportActionBar(binding.toolbar)
+
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
         binding.toolbar.setNavigationOnClickListener {
@@ -143,7 +144,6 @@ class ItemDetailActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun editItem() {
-
 
     val newLicence = binding.textViewLicence.text.toString()
         if (newLicence.isEmpty()) {
