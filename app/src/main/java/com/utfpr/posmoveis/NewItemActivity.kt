@@ -4,12 +4,19 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.core.content.FileProvider
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,14 +38,27 @@ import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 import com.utfpr.posmoveis.service.Result.Success
 import com.utfpr.posmoveis.service.Result.Error
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
     private lateinit var binding: ActivityNewItemBinding
     private lateinit var mMap: GoogleMap
 
     private var selectedMarker: Marker? = null
-
+    private lateinit var imageUri: Uri
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private val cameraLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (it.resultCode == RESULT_OK) {
+            binding.imageUrl.setText("Imagem Obtida")
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +81,52 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
         binding.saveCar.setOnClickListener {
             saveItem()
         }
+
+        binding.takePictureCar.setOnClickListener {
+            takePicture()
+        }
     }
+
+    private fun takePicture(){
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            openCamera()
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.CAMERA),
+                CAMERA_PERMISSION_REQUEST_CODE
+            )
+        }
+
+    }
+
+    private fun openCamera() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        imageUri = createImageUri()
+        // quando abrir a camera armazena a imagem no uri
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+        cameraLauncher.launch(intent)
+    }
+
+    private fun createImageUri(): Uri {
+
+        // define o nome do arquivo
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "JPEG_" + timeStamp + "_"
+
+        val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+
+        val imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
+
+        return FileProvider.getUriForFile(
+            this,
+            "com.utfpr.posmoveis.fileprovider",
+            imageFile!!
+        )
+    }
+
+
+
     @SuppressLint("MissingPermission")
     private fun requestLocationPermission() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -120,11 +185,11 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
 
                 }
             }
-//            CAMERA_PERMISSION_REQUEST_CODE -> {
-//                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    openCamera()
-//                }
-//            }
+            CAMERA_PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    openCamera()
+                }
+            }
         }
     }
 
@@ -167,6 +232,7 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
                     it.longitude
                 )
             }
+
 
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -231,6 +297,7 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
 
     companion object {
 
+        private const val CAMERA_PERMISSION_REQUEST_CODE = 1002
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
         fun newIntent(context: Context): Intent {
             return Intent(context, NewItemActivity::class.java)

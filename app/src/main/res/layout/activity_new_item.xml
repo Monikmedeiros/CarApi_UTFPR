@@ -62,7 +62,7 @@
         app:layout_constraintTop_toBottomOf="@id/licence" />
 
     <ImageButton
-        android:id="@+id/takePictureCta"
+        android:id="@+id/takePictureCar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:src="@android:drawable/ic_menu_camera"
@@ -76,7 +76,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="@id/imageUrl"
-        app:layout_constraintBottom_toBottomOf="@id/takePictureCta"
+        app:layout_constraintBottom_toBottomOf="@id/takePictureCar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -87,7 +87,7 @@
         android:layout_marginTop="12dp"
         android:layout_marginBottom="12dp"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/takePictureCta"
+        app:layout_constraintTop_toBottomOf="@id/takePictureCar"
         app:layout_constraintBottom_toTopOf="@id/saveCar"
         tools:visibility="visible">
 
