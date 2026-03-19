@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -26,6 +28,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.storage.FirebaseStorage
 import com.utfpr.posmoveis.databinding.ActivityNewItemBinding
 import com.utfpr.posmoveis.model.Item
 import com.utfpr.posmoveis.model.Place
@@ -38,10 +41,13 @@ import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 import com.utfpr.posmoveis.service.Result.Success
 import com.utfpr.posmoveis.service.Result.Error
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
+import kotlin.uuid.Uuid
 
 class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
     private lateinit var binding: ActivityNewItemBinding
@@ -49,6 +55,8 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
 
     private var selectedMarker: Marker? = null
     private lateinit var imageUri: Uri
+
+    private var imageFile: File? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val cameraLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
@@ -116,7 +124,8 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
 
         val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
 
-        val imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
+        // guarda a imagem temporaria
+        imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
 
         return FileProvider.getUriForFile(
             this,
@@ -226,36 +235,91 @@ class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
         private fun saveItem() {
             if (!validateFields()) return
 
-            val itemPosition = selectedMarker?.position?.let {
-                Place(
-                    it.latitude,
-                    it.longitude
-                )
-            }
+
+            uploadImageToFirebase()
+
+
+        }
+
+    private fun saveData(){
+        val itemPosition = selectedMarker?.position?.let {
+            Place(
+                it.latitude,
+                it.longitude
+            )
+        }
 
 
 
-            CoroutineScope(Dispatchers.IO).launch {
-                val id = (1000..9999).random().toString()
-                val item = Item(
-                    id = id,
-                    binding.imageUrl.text.toString(),
-                    binding.year.text.toString(),
-                    binding.name.text.toString(),
-                    licence = binding.licence.text.toString(),
-                    place = itemPosition
-                )
-                val result = safeApiCall { RetrofitClient.apiService.addItem(item) }
+        CoroutineScope(Dispatchers.IO).launch {
+            val id = (1000..9999).random().toString()
+            val item = Item(
+                id = id,
+                binding.imageUrl.text.toString(),
+                binding.year.text.toString(),
+                binding.name.text.toString(),
+                licence = binding.licence.text.toString(),
+                place = itemPosition
+            )
+            val result = safeApiCall { RetrofitClient.apiService.addItem(item) }
 
 
-                withContext(Dispatchers.Main) {
-                    when (result) {
-                        is com.utfpr.posmoveis.service.Result.Success -> handleOnSuccess()
-                        is com.utfpr.posmoveis.service.Result.Error -> handleOnError()
-                    }
+            withContext(Dispatchers.Main) {
+                when (result) {
+                    is com.utfpr.posmoveis.service.Result.Success -> handleOnSuccess()
+                    is com.utfpr.posmoveis.service.Result.Error -> handleOnError()
                 }
             }
         }
+    }
+
+    private fun uploadImageToFirebase(){
+        // apenas se eu tiver o arquivo
+        imageFile?.let {
+
+
+            // inicializar Firebase storage
+            val storageRef = FirebaseStorage.getInstance().reference
+
+            // criar uma referencia unica para a imagem
+            val imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
+
+            // converter o bitmap em um Bytemap
+            val baos = ByteArrayOutputStream()
+            val imageBitmap = BitmapFactory.decodeFile(it.path)
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+
+            val data = baos.toByteArray()
+            //desabilitar controles durante o upload
+            onLoadImage(true)
+            imageRef.putBytes(data)
+                .addOnFailureListener {
+                    onLoadImage(false)
+                    Toast.makeText(this, "Falha ao realizar o Upload para o Firebase", Toast.LENGTH_LONG).show()
+                }
+
+                .addOnSuccessListener {
+                    onLoadImage(false)
+                    imageRef.downloadUrl.addOnSuccessListener { uri ->
+                        // atribui a uri de download do firebase ao text para salvar
+                        binding.imageUrl.setText(uri.toString())
+
+                        // salvar apenas quando tiver a url
+                        saveData()
+                    }
+                }
+        }
+
+    }
+
+
+    fun onLoadImage(isLoading: Boolean) {
+        binding.loadImageProgress.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.takePictureCar.isEnabled = !isLoading
+        binding.saveCar.isEnabled = !isLoading
+    }
+
+
     private fun handleOnError() {
         Toast.makeText(
             this@NewItemActivity,
