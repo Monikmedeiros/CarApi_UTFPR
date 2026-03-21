@@ -19,6 +19,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
 import com.utfpr.posmoveis.adapter.ItemAdapter
+import com.utfpr.posmoveis.database.DatabaseBuilder
+import com.utfpr.posmoveis.database.model.UserLocation
 import com.utfpr.posmoveis.databinding.ActivityMainBinding
 import com.utfpr.posmoveis.model.Item
 import com.utfpr.posmoveis.service.RetrofitClient
@@ -125,6 +127,19 @@ class MainActivity : AppCompatActivity() {
                 val latitude = location.latitude
                 val longitude = location.longitude
                 Toast.makeText(this, "Latitude: $latitude, Longitude: $longitude", Toast.LENGTH_SHORT).show()
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    val userLocation = UserLocation(
+                        latitude = latitude,
+                        longitude = longitude
+                    )
+                    DatabaseBuilder.getInstance()
+                        .userLocationDao()
+                        .insert(userLocation)
+                }
+
+
+
             } else {
                 Toast.makeText(this, "Não foi possível obter a localização", Toast.LENGTH_SHORT).show()
             }

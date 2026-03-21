@@ -47,7 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
-import kotlin.uuid.Uuid
+
 
 class NewItemActivity : AppCompatActivity(), OnMapReadyCallback  {
     private lateinit var binding: ActivityNewItemBinding
