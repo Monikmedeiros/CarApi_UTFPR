@@ -2,10 +2,14 @@ package com.utfpr.posmoveis
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.location.Location
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -18,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
 import com.utfpr.posmoveis.adapter.ItemAdapter
 import com.utfpr.posmoveis.database.DatabaseBuilder
 import com.utfpr.posmoveis.database.model.UserLocation
@@ -63,6 +68,27 @@ class MainActivity : AppCompatActivity() {
         fetchItems()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_loggout -> {
+                onLoggout()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun onLoggout() {
+        FirebaseAuth.getInstance().signOut()
+        val intent = LoginActivity.newIntent(this)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
 
     private fun setupView() {
 
@@ -175,6 +201,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+
     private fun handleOnError() {
        // binding.message.visibility = View.VISIBLE
         //binding.message.setText(R.string.generical_error)
@@ -190,6 +218,13 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+
+    }
+
+    companion object {
+
+        fun newIntent(context: Context) =
+            Intent(context, MainActivity::class.java)
 
     }
 }

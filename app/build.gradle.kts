@@ -1,13 +1,12 @@
-
-
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    id("org.jetbrains.kotlin.kapt") // Sem a versão, ele herda do Kotlin principal
+
+    // Mantendo os IDs manuais que você já tinha
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
 }
-
 android {
         namespace = "com.utfpr.posmoveis"
         compileSdk = 36

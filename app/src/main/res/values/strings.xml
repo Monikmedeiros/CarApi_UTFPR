@@ -9,4 +9,10 @@
     <string name="success_add_item">Item adicionado com Sucesso!</string>
     <string name="error_add_item">Erro ao cadastrar Item!</string>
     <string name="location_permission_denied">Permissão de acesso NEGADA!</string>
+    <string name="hint_cellphone">"+ 55 41 99999 9999 "</string>
+    <string name="code_brazil">+ 55</string>
+    <string name="send_sms">Enviar SMS</string>
+    <string name="hint_verify_sms">123456</string>
+    <string name="verify_sms">Verificar SMS</string>
+    <string name="menu_loggout">Sair</string>
 </resources>
